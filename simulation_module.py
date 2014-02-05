@@ -124,8 +124,9 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 						As an even span requires corrections, a warning message will be 
 						produced
 
-				- frequencies: list of oredered frequencies (related to occurrencies) for each
-							   item in bins
+				- occurrencies: list of oredered occurrencies for each item in bins
+
+				- frequencies: list of oredered frequencies for each item in bins
 						
 				- expected_value: integer, representing the expected value underlaying the
 				                  histogram computation
@@ -192,7 +193,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 			discretized_realizations.append(int(r))
 
 		# Compute occurrencies
-		occurrencies = []
+		occurrencies = [] ### VARIABLE TO RETURN
 		total_occurrencies = 0
 		for bin in bins:
 			bin_occurrence = discretized_realizations.count(bin)
@@ -222,15 +223,14 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 			frequencies.append(float(occurrence)/total_occurrencies)
 
 		# 'Fit' data and test goodness-of-fit
-		realizations_standardized = [((r - scipy.mean(discretized_realizations))/ scipy.std(discretized_realizations)) for r in discretized_realizations]
+		realizations_standardized = [ float(r - expected_value)/float(st_dev) for r in realizations]
 		KS_test, p_value = stats.kstest(realizations_standardized, 'norm') ###VARIABLES TO RETURN
-		##########################################################################################
-		### Kolmogorov-Smirnov test for goodness of fit is done over 'discretized_realizations'  #
-		### Like that, the question becomes: does my histogram look like any gaussian histogram? #
-		##########################################################################################
+		###############################################################################
+		### Kolmogorov-Smirnov test for goodness of fit is done over 'realizations'   #
+		###############################################################################
 
 		# CREATE FINAL OBJECT TO RETURN #
-		return classes_for_data_simulation.Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, frequencies, realization_beyond_edges, p_value, KS_test)
+		return classes_for_data_simulation.Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, frequencies, occurrencies, realization_beyond_edges, p_value, KS_test)
 
 		###############################################################################################################################################################################################
 

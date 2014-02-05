@@ -37,13 +37,14 @@ import simulation_module
 
 class Histogram:
 
-	def __init__ (self, source_distribution, distribution_parameters, n_of_events, expected_value, bins, frequencies, realization_beyond_edges, p_value, another_GOF_indicator = None):
+	def __init__ (self, source_distribution, distribution_parameters, n_of_events, expected_value, bins, frequencies, occurrencies, realization_beyond_edges, p_value, another_GOF_indicator = None):
 
 		self.source_distribution = source_distribution # String
 		self.distribution_parameters = distribution_parameters[source_distribution] # Dictionary
 		self.n_of_events = n_of_events # Integer
 		self.expected_value = expected_value # Integer
 		self.bins = bins # List of integers, starting from 0
+		self.occurrencies = occurrencies # List of integers, paired with bins
 		self.frequencies = frequencies # List of float, paired with bins
 		self.realization_beyond_edges = realization_beyond_edges # Dictionary 	# key = string, +/- distance from expected_value
 																				# item = integer, number of occurrencies found
@@ -52,8 +53,11 @@ class Histogram:
 		
 		# Post Amplification
 		self.amplified = False
-		self.n_of_mapped_sequencies = None
-		self.sequence_count = [None]*len(frequencies)
+		self.n_of_mapped_sequencies = None # Integer; 'Amplified analogous' of n_of_events
+		self.sequence_count = [None]*len(occurrencies) # List of integers, 'amplified analogous' of occurrencies, paired with bins
+		self.abundances = [None]*len(frequencies) # List of float, 'amplified analogous' of frequencies, paired with bins
+		self.p_value_post_amplification = None
+		self.another_GOF_indicator_post_amplification = None #KS_test if source_distribution='gauss'
 
 
 
@@ -147,16 +151,16 @@ class Histogram:
 			figure_title = title
 		# Case of Amplified Histogram
 		if (self.amplified == True):
-			figure_title = figure_title + "\n[Amplified to SC = {0}]".format(str(self.n_of_mapped_sequencies))
+			figure_title = figure_title + "\n[Amplified to MS = {0}; p = {1}]".format(str(self.n_of_mapped_sequencies), str(self.p_value_post_amplification))
 
 		# Insert Title
 		plt.title(figure_title)
 
 		# Axes Labels
 		plt.xlabel('bp')
-		y_label = "events frequency"
+		y_label = "#N of Occurrencies"
 		if (self.amplified == True):
-			y_label = "sequence_count"
+			y_label = "Sequence_Count"
 		plt.ylabel(y_label)
 
 
@@ -164,7 +168,7 @@ class Histogram:
 		if (self.amplified == True):
 			plt.bar(self.bins, self.sequence_count, align='center', width=bar_width, hold=True, facecolor=color)
 		else:
-			plt.bar(self.bins, self.frequencies, align='center', width=bar_width, hold=True, facecolor=color)
+			plt.bar(self.bins, self.occurrencies, align='center', width=bar_width, hold=True, facecolor=color)
 
 
 		### Show
@@ -186,7 +190,7 @@ class Histogram:
 					file_name = "#" + str(id_num) + "_Hist_"+self.source_distribution+"_N{0}_[{1}{2}]_p={3}".format(str(self.n_of_events), str(self.expected_value), next_moment, str(self.p_value)[:4])
 				# Case of Amplified Histogram
 				if (self.amplified == True):
-					file_name = file_name + "_[Amplified_SC{0}]".format(str(self.n_of_mapped_sequencies))
+					file_name = file_name + "_[Amplified_MS{0}]".format(str(self.n_of_mapped_sequencies))
 				file_name = file_name + ".pdf"
 			else:
 				file_name = name

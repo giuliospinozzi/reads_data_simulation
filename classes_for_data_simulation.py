@@ -65,53 +65,84 @@ class Histogram:
 
 
 
-	def amplify (self, minimum_amplification_factor=1, maximum_amplification_factor=1000):
+	def amplify (self, amplification_bias=True, minimum_amplification_factor=0, maximum_amplification_factor=1000, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
 
 		# This method works only with unamplified Histograms
 		if (self.amplified == False):
 
-			### CAST
-			if ((minimum_amplification_factor is not int) or (maximum_amplification_factor is not int)):
-				minimum_amplification_factor = int(minimum_amplification_factor)
-				maximum_amplification_factor = int(maximum_amplification_factor)
-				print "\n[WARNING] 'Amplify()' method of Histogram Class supports only integer arguments. [Cast has been done]"
-
 			### Create a copy of Histogram object
 			amplified_Histogram = copy.deepcopy(self) ### OBJECT TO RETURN
 
-
-			### Introduce PCR bias for each realization
-
-			# Get a copy of self.discrete_realizations (to work on it)
-			discrete_realizations = copy.deepcopy(self.discrete_realizations)
-
 			# Inizialize results collectors
-			amplified_occurrencies = [0]*len(self.occurrencies) ### VARIABLE TO RETURN
-			amplified_discrete_realizations = []
-			total_amplified_n_of_events = 0 ### VARIABLE TO RETURN
+			amplified_discrete_realizations = copy.deepcopy(self.discrete_realizations)
+			total_amplified_n_of_events = copy.deepcopy(self.n_of_events) ### VARIABLE TO RETURN
+			amplified_occurrencies = copy.deepcopy(self.occurrencies) ### VARIABLE TO RETURN
+
+			### Introduce PCR-AMPLIFICATION BIAS for each realization
+			if (amplification_bias == True): 
+
+				# Cast
+				if ((type(minimum_amplification_factor) is not int) or (type(maximum_amplification_factor) is not int)):
+					minimum_amplification_factor = int(minimum_amplification_factor)
+					maximum_amplification_factor = int(maximum_amplification_factor)
+					print "\n[WARNING] 'Amplify()' method of Histogram Class supports only integer arguments: cast has been done."
+
+				# Set total_amplified_n_of_events
+				total_amplified_n_of_events = 0
+				amplified_discrete_realizations = []
+				amplified_occurrencies = [0]*len(self.occurrencies)
+
+				# Get a copy of self.discrete_realizations (to work on it)
+				discrete_realizations = copy.deepcopy(self.discrete_realizations)
+
+				# Loop: until discrete_realizations local variable is []  # Comupte: - amplified_discrete_realizations (for GOF test)
+																		  #          - total_amplified_n_of_events -> amplified_Histogram.n_of_mapped_sequencies
+																		  #          - amplified_occurrencies -> amplified_Histogram.sequence_count (then amplified_frequencies -> amplified_Histogram.abundances)
+				while (discrete_realizations != []):
+
+					# Randomly choose a realization
+					selected_realization = random.choice(discrete_realizations)
+					# remove it (like pop)
+					discrete_realizations.remove(selected_realization)
+					# Amplify: relate a number to selected_realization
+					current_amplification_factor = random.randint(minimum_amplification_factor,maximum_amplification_factor)
+					# Update amplified_discrete_realizations
+					amplified_discrete_realizations = amplified_discrete_realizations + [selected_realization]*current_amplification_factor
+					# Update total_amplified_n_of_events
+					total_amplified_n_of_events = total_amplified_n_of_events + current_amplification_factor
+					# Sum the result in the related amplified_occurrency
+					amplified_occurrencies_index = self.bins.index(selected_realization)
+					amplified_occurrencies[amplified_occurrencies_index] = amplified_occurrencies[amplified_occurrencies_index] + current_amplification_factor
 
 
-			# Loop: until discrete_realizations local variable is []
-			while (discrete_realizations != []):
+			### Introduce PCR-SLIPPAGE BIAS for each occurrence (bin)
+			if (slippage_bias == True):
 
-				# Randomly choose a realization
-				selected_realization = random.choice(discrete_realizations)
-				# remove it (like pop)
-				discrete_realizations.remove(selected_realization)
-				# Amplify: relate a number to selected_realization
-				current_amplification_factor = random.randint(minimum_amplification_factor,maximum_amplification_factor+1)
-				################################################################
-				# A specific algorithm should be implemented soon              #
-				# Something like:                                              #
-				# amp_factor = simulation_module.get_amplification_factor(...) #
-				################################################################
-				# Update amplified_discrete_realizations
-				amplified_discrete_realizations = amplified_discrete_realizations + [selected_realization]*current_amplification_factor
-				# Update total_amplified_n_of_events
-				total_amplified_n_of_events = total_amplified_n_of_events + current_amplification_factor
-				# Sum the result in the related amplified_occurrency
-				amplified_occurrencies_index = self.bins.index(selected_realization)
-				amplified_occurrencies[amplified_occurrencies_index] = amplified_occurrencies[amplified_occurrencies_index] + current_amplification_factor
+				# Inizialize Slippage Biases Dictionary: #Key: 'bin value'; #Item: related_change_in_occurrencies
+				slippage_biases_dictionary = {}
+				for bin in self.bins:
+					slippage_biases_dictionary.update({str(bin):0})
+
+				# State gain and loss in occurrencies for each bin; store infos in Slippage Biases Dictionary
+				for bin, occurrency in zip(self.bins, amplified_occurrencies):
+
+					# State how much occurrencies go away:
+					occurrencies_variation = random.randint(int(occurrency*minimum_splippage_percentage*0.01),int(occurrency*maximum_splippage_percentage*0.01))
+
+					# State 'where this stuff goes'
+					key = str(random.choice(self.bins))
+
+					# Update Slippage Biases Dictionary
+					slippage_biases_dictionary[str(bin)] = slippage_biases_dictionary[str(bin)] - occurrencies_variation # Current bin loose...
+					slippage_biases_dictionary[key] = slippage_biases_dictionary[key] + occurrencies_variation # ...what a random-selected bin gains!
+
+				# Update amplified_occurrencies taking advantage of slippage_biases_dictionary (total_amplified_n_of_events is conserved) and amplified_discrete_realizations (needed by GOF Test)
+				amplified_discrete_realizations = []
+				for bin in self.bins:
+					index = self.bins.index(bin)
+					amplified_occurrencies[index] = amplified_occurrencies[index] + slippage_biases_dictionary[str(bin)]
+					amplified_discrete_realizations = amplified_discrete_realizations + [bin]*amplified_occurrencies[index]
+
 
 			### Calculate amplified_frequencies (abundances)
 			amplified_frequencies = [] ### VARIABLE TO RETURN
@@ -130,9 +161,8 @@ class Histogram:
 				p_value_post_amplification = p_value
 				another_GOF_indicator_post_amplification = KS_test
 			else:
-				print "\n[WARNING] 'Amplify()'' method of Histogram Class, up to now, can't provide either 'p_value_post_amplification' or 'another_GOF_indicator_post_amplification' for {0} distribution...!".format(self.source_distribution)
+				print "\n\n[WARNING] 'Amplify()'' method of Histogram Class, up to now, can't provide either 'p_value_post_amplification' or 'another_GOF_indicator_post_amplification' for {0} distribution...!".format(self.source_distribution)
 				print "          By now, 'None'(s) have been returned; conversely, all the other attributes are correct.\n"
-
 
 			### Update 'amplified' attribute
 			amplified_Histogram.amplified = True
@@ -142,87 +172,16 @@ class Histogram:
 			amplified_Histogram.p_value_post_amplification = p_value_post_amplification
 			amplified_Histogram.another_GOF_indicator_post_amplification = another_GOF_indicator_post_amplification #KS_test if source_distribution='gauss'
 
-
 			### Return the amplified Histogram
 			return amplified_Histogram
 
 		else:
-			print "\n[WARNING] You are trying to amplify() an Histogram object that seems to be already amplified...!"
+			print "\n\n[WARNING] You are trying to amplify() an Histogram object that seems to be already amplified...!"
 			print "          Because of this, the same object has been returned by amplify() method.\n"
 
+			### Resturn itself
 			return self
 
-
-
-### OBSOLETE ####################################################################################################################################################################
-	def amplify_old (self, ):
-
-		# This method works only with unamplified Histograms
-		if (self.amplified == False):
-
-			### Create a copy of Histogram object
-			amplified_Histogram = copy.deepcopy(self)
-
-			### Amplification factor
-			amp_factor = 1000
-			################################################################
-			# A specific algorithm should be implemented soon              #
-			# Something like:                                              #
-			# amp_factor = simulation_module.get_amplification_factor(...) #
-			################################################################
-
-			### Amplify n_of_events -> Update n_of_mapped_sequencies
-			amplified_Histogram.n_of_mapped_sequencies = (amplified_Histogram.n_of_events)*amp_factor
-
-
-			### Introduce PCR biases bin by bin
-
-			# Inizialize Biases Dictionary: #Key: 'bin value'; #Item: related_change_in_frequency
-			biases_dictionary = {}
-			for bin in amplified_Histogram.bins:
-				biases_dictionary.update({str(bin):0})
-
-			# State gain and loss in frequency for each bin; store infos in Biases Dictionary
-			for bin, frequency in zip(amplified_Histogram.bins, amplified_Histogram.frequencies):
-
-				### State 'how much frequency' goes away
-				frequency_variation = random.triangular(0, (frequency*0.1))
-				###################################################################
-				# A specific algorithm should be implemented soon                 #
-				# Something like:                                                 #
-				# frequency_variation = simulation_module.get_frequency_loss(...) #
-				###################################################################
-
-				### State 'where this stuff goes'
-				key = str(random.choice(amplified_Histogram.bins))
-				###################################################
-				# A specific algorithm should be implemented soon #
-				# Something like:                                 #
-				# key = simulation_module.get_bias_target (...)   #
-				###################################################
-
-				### Update Biases Dictionary
-				biases_dictionary[str(bin)] = biases_dictionary[str(bin)] - frequency_variation # Current bin loose...
-				biases_dictionary[key] = biases_dictionary[key] + frequency_variation # ...what a random-selected bin gains!
-
-
-			### Set up sequence_count taking advantage of biases_dictionary
-			for bin in amplified_Histogram.bins:
-				index = amplified_Histogram.bins.index(bin)
-				amplified_Histogram.sequence_count[index] = (amplified_Histogram.frequencies[index] + biases_dictionary[str(bin)]) * (amplified_Histogram.n_of_mapped_sequencies)
-
-			### Update 'amplified' attribute
-			amplified_Histogram.amplified = True
-
-			### Return the amplified Histogram
-			return amplified_Histogram
-
-		else:
-			print "\n[WARNING] You are trying to amplify() an Histogram object that seems to be already amplified...!"
-			print " Because of this, the same object has been returned by amplify() method.\n"
-
-			return self
-####################################################################################################################################################################################
 
 
 

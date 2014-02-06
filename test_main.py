@@ -8,10 +8,14 @@ distribution_parameters = {'gauss':{'st_dev':1.0}}
 span = 7
 n_of_events = 15
 n_of_trial = 100
-p_value_threshold = 0.05
+# p_value_threshold = 0.05 ...shape a parte, favorisce valori attesi sballati! (penalizza accuratezza del mio algoritmo gauss nel matricione!!)
+p_value_threshold = 1 ## OCCHIO!! Cosi' li tengo tutti (evitare save_plot...)
 
 show_plot = True
 save_plot = False
+
+amp_bias = True
+slip_bias = True
 ###################################################
 
 
@@ -60,7 +64,7 @@ for i in range(0,n_of_trial):
 
 		#Amplify
 		print "\nNow trying to amplify ... ",
-		Amplified_Histogram_object = Histogram_object.amplify()
+		Amplified_Histogram_object = Histogram_object.amplify(amplification_bias=amp_bias, minimum_amplification_factor=0, maximum_amplification_factor=1000, slippage_bias=slip_bias, minimum_splippage_percentage=0, maximum_splippage_percentage=1)
 		print "Done!"
 
 		# Print Info about current Histogram

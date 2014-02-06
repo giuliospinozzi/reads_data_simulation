@@ -124,6 +124,11 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 						As an even span requires corrections, a warning message will be 
 						produced
 
+				- discrete_realizations: list of realization from source_distribution, discretized 
+										 and cleaned (realizations beyond bin edges are discarded)
+										 [Note: from cleaned_discretized_realizations variable of
+										  this function]
+
 				- occurrencies: list of oredered occurrencies for each item in bins
 
 				- frequencies: list of oredered frequencies for each item in bins
@@ -131,7 +136,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 				- expected_value: integer, representing the expected value underlaying the
 				                  histogram computation
 
-				- realization_beyond_edges: dictionary: 'string, +/- distance from expected_value'
+				- discrete_realizations_beyond_edges: dictionary: 'string, +/- distance from expected_value'
 											as key, 'integer, number of occurrencies found' as item
 
 				- p-value: float, result of GOF test
@@ -192,6 +197,10 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 			realizations.append(r)
 			discretized_realizations.append(int(r))
 
+		###################################################################################################################
+		### From now on, discretized_realizations falling beyond bin boundaries (bins[0] and bins[-1]) are not accounted! #
+		###################################################################################################################
+
 		# Compute occurrencies
 		occurrencies = [] ### VARIABLE TO RETURN
 		total_occurrencies = 0
@@ -199,23 +208,25 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 			bin_occurrence = discretized_realizations.count(bin)
 			occurrencies.append(bin_occurrence)
 			total_occurrencies = total_occurrencies + bin_occurrence
-		###################################################################################################################
-		### Doing like this, discretized_realizations falling beyond bin boundaries (bins[0] and bins[-1]) are discarded! #
-		###################################################################################################################
 
-		# Accounting for discretized_realizations falling beyond bin boundaries
-		realization_beyond_edges = {}   # key = string, +/- distance from expected_value
-										# item = integer, number of occurrencies found
-		if (total_occurrencies != len(discretized_realizations)):
-			for realization in discretized_realizations:
-				if (realization not in bins):
-					key = str(int(realization - expected_value)) # int should be redundant
-					if (realization_beyond_edges.has_key(key)):
-						item = realization_beyond_edges[key] + 1
-						realization_beyond_edges[key] = item
-					else:
-						item = 1
-						realization_beyond_edges.update({key:item})
+		# Accounting for discretized_realizations falling beyond bin boundaries, then clean discretized_realizations
+		discrete_realizations_beyond_edges = {}   # key = string, +/- distance from expected_value
+												 # item = integer, number of occurrencies found
+		cleaned_discretized_realizations = [] ### VARIABLE TO RETURN
+											  # The same as discretized_realizations but without realizations falling beyond bin boundaries
+		for discrete_realization in discretized_realizations:
+			if (discrete_realization not in bins):
+				# Update discrete_realizations_beyond_edges
+				key = str(int(discrete_realization - expected_value)) # int should be redundant
+				if (discrete_realizations_beyond_edges.has_key(key)):
+					item = discrete_realizations_beyond_edges[key] + 1
+					discrete_realizations_beyond_edges[key] = item
+				else:
+					item = 1
+					discrete_realizations_beyond_edges.update({key:item})
+			else:
+				# Update cleaned_discretized_realizations
+				cleaned_discretized_realizations.append(discrete_realization)
 
 		# Compute frequencies
 		frequencies = [] ### VARIABLE TO RETURN
@@ -227,10 +238,11 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 		KS_test, p_value = stats.kstest(realizations_standardized, 'norm') ###VARIABLES TO RETURN
 		###############################################################################
 		### Kolmogorov-Smirnov test for goodness of fit is done over 'realizations'   #
+		### (not discrete)                                                            #
 		###############################################################################
 
 		# CREATE FINAL OBJECT TO RETURN #
-		return classes_for_data_simulation.Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, frequencies, occurrencies, realization_beyond_edges, p_value, KS_test)
+		return classes_for_data_simulation.Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, cleaned_discretized_realizations, frequencies, occurrencies, discrete_realizations_beyond_edges, p_value, KS_test)
 
 		###############################################################################################################################################################################################
 

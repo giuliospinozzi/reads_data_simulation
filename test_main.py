@@ -48,9 +48,10 @@ for i in range(0,n_of_trial):
 		print "distribution_parameters = ", Histogram_object.distribution_parameters
 		print "n_of_events = ", Histogram_object.n_of_events
 		print "bins = ", Histogram_object.bins
+		print "discrete_realizations = ", Histogram_object.discrete_realizations
 		print "occurrencies = ", Histogram_object.occurrencies
 		print "frequencies = ", Histogram_object.frequencies
-		print "realization_beyond_edges = ", Histogram_object.realization_beyond_edges
+		print "discrete_realizations_beyond_edges = ", Histogram_object.discrete_realizations_beyond_edges
 		print "p_value = ", Histogram_object.p_value
 		print "another GOF index = ", Histogram_object.another_GOF_indicator
 

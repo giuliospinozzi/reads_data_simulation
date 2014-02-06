@@ -125,6 +125,11 @@ class IS_Histogram:
 			else:
 				# Tick amplification bias
 				amplified_IS_Histogram.amplification_bias = False
+				############################################################################################################
+				#                           ### TO DO (although not strictly necessary) ###                                #
+				# Perform a simple 'rescaling' with a random-selected factor (between 1 and maximum_amplification_factor)  #
+				# Update attribute                                                                                         #
+				############################################################################################################
 
 
 

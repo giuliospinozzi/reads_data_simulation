@@ -89,7 +89,7 @@ def distribution_parameters_controls(distribution_parameters, source_distributio
 def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n_of_events):
 	
 	'''
-	*** Brief description ***
+	*** The best way to get an IS_Histogram Class Instance from few input parameters ***
 
 	INPUT: - source_distribution: the string defining the distribution called to generate 
 	                              the histogram; in case of incorrect type or unavailable
@@ -98,7 +98,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 	       - distribution_parameters: nested dictionary of the parameters defining
 	                                  source_distribution;
 	                                  external key = source_distribution
-	                                  internal key = 'name-of-desired-parameter'
+	                                  internal key(s) = 'name-of-desired-parameter(s)'
 	                                  
 	                                  e.g. gauss:
 	                                  st_dev = distribution_parameters['gauss']['st_dev']
@@ -109,7 +109,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 	       - n_of_events: integer representing the number of discretized_realizations used to generate
 	       				  the histogram (sum of occurrences); n_of_events must be >= 1
 
-	OUTPUT: - Histogram object (see classes_for_data_simulation module).
+	OUTPUT: - IS_Histogram object (see classes_for_data_simulation module).
 			  Such an object has following attributes:
 
 			  	- source_distribution, distribution_parameters, n_of_events like data
@@ -136,17 +136,13 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 				- expected_value: integer, representing the expected value underlaying the
 				                  histogram computation
 
-				- discrete_realizations_beyond_edges: dictionary: 'string, +/- distance from expected_value'
-											as key, 'integer, number of occurrencies found' as item
+				- discrete_realizations_beyond_edges: dictionary: 'string, +/- distance from expected_value' as key, 
+																  'integer, number of occurrencies found' as item
 
 				- p-value: float, result of GOF test
 
 				- another_GOF_indicator: None for general purpose; KS_test if 'gauss' is the
 										 source_distribution
-
-			[further data are available if you need them:
-			 - span: like the one given in input, sometimes modified to fit chosen 'source_distribution'
-			 - occurrencies: list of oredered occurrecies for each item in bins]
 
 	NOTE: 1) about (source_distribution == 'gauss') case:
 			 A Kolmogorov-Smirnov test for goodness of fit is performed
@@ -242,7 +238,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 		###############################################################################
 
 		# CREATE FINAL OBJECT TO RETURN #
-		return classes_for_data_simulation.Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, cleaned_discretized_realizations, frequencies, occurrencies, discrete_realizations_beyond_edges, p_value, KS_test)
+		return classes_for_data_simulation.IS_Histogram(source_distribution, distribution_parameters, n_of_events, expected_value, bins, cleaned_discretized_realizations, frequencies, occurrencies, discrete_realizations_beyond_edges, p_value, KS_test)
 
 		###############################################################################################################################################################################################
 

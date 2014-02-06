@@ -36,7 +36,7 @@ import simulation_module
 
 
 
-class Histogram:
+class IS_Histogram:
 
 	def __init__ (self, source_distribution, distribution_parameters, n_of_events, expected_value, bins, discrete_realizations, frequencies, occurrencies, discrete_realizations_beyond_edges, p_value, another_GOF_indicator = None):
 
@@ -56,6 +56,8 @@ class Histogram:
 		
 		# Post Amplification
 		self.amplified = False
+		self.amplification_bias = None
+		self.slippage_bias = None
 		self.n_of_mapped_sequencies = None # Integer; 'Amplified analogous' of n_of_events
 		self.sequence_count = [None]*len(occurrencies) # List of integers, 'amplified analogous' of occurrencies, paired with bins
 		self.abundances = [None]*len(frequencies) # List of float, 'amplified analogous' of frequencies, paired with bins
@@ -67,11 +69,14 @@ class Histogram:
 
 	def amplify (self, amplification_bias=True, minimum_amplification_factor=0, maximum_amplification_factor=1000, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
 
-		# This method works only with unamplified Histograms
+		# This method works only with unamplified IS_Histograms
 		if (self.amplified == False):
 
-			### Create a copy of Histogram object
-			amplified_Histogram = copy.deepcopy(self) ### OBJECT TO RETURN
+			### Create a copy of IS_Histogram object
+			amplified_IS_Histogram = copy.deepcopy(self) ### OBJECT TO RETURN
+
+			# Tick amplification
+			amplified_IS_Histogram.amplified = True
 
 			# Inizialize results collectors
 			amplified_discrete_realizations = copy.deepcopy(self.discrete_realizations)
@@ -85,7 +90,10 @@ class Histogram:
 				if ((type(minimum_amplification_factor) is not int) or (type(maximum_amplification_factor) is not int)):
 					minimum_amplification_factor = int(minimum_amplification_factor)
 					maximum_amplification_factor = int(maximum_amplification_factor)
-					print "\n[WARNING] 'Amplify()' method of Histogram Class supports only integer arguments: cast has been done."
+					print "\n[WARNING] 'Amplify()' method of IS_Histogram Class supports only integer arguments: cast has been done."
+
+				# Tick amplification bias
+				amplified_IS_Histogram.amplification_bias = True
 
 				# Set total_amplified_n_of_events
 				total_amplified_n_of_events = 0
@@ -96,8 +104,8 @@ class Histogram:
 				discrete_realizations = copy.deepcopy(self.discrete_realizations)
 
 				# Loop: until discrete_realizations local variable is []  # Comupte: - amplified_discrete_realizations (for GOF test)
-																		  #          - total_amplified_n_of_events -> amplified_Histogram.n_of_mapped_sequencies
-																		  #          - amplified_occurrencies -> amplified_Histogram.sequence_count (then amplified_frequencies -> amplified_Histogram.abundances)
+																		  #          - total_amplified_n_of_events -> amplified_IS_Histogram.n_of_mapped_sequencies
+																		  #          - amplified_occurrencies -> amplified_IS_Histogram.sequence_count (then amplified_frequencies -> amplified_IS_Histogram.abundances)
 				while (discrete_realizations != []):
 
 					# Randomly choose a realization
@@ -114,9 +122,17 @@ class Histogram:
 					amplified_occurrencies_index = self.bins.index(selected_realization)
 					amplified_occurrencies[amplified_occurrencies_index] = amplified_occurrencies[amplified_occurrencies_index] + current_amplification_factor
 
+			else:
+				# Tick amplification bias
+				amplified_IS_Histogram.amplification_bias = False
+
+
 
 			### Introduce PCR-SLIPPAGE BIAS for each occurrence (bin)
 			if (slippage_bias == True):
+
+				# Tick slippage bias
+				amplified_IS_Histogram.slippage_bias = True
 
 				# Inizialize Slippage Biases Dictionary: #Key: 'bin value'; #Item: related_change_in_occurrencies
 				slippage_biases_dictionary = {}
@@ -143,6 +159,10 @@ class Histogram:
 					amplified_occurrencies[index] = amplified_occurrencies[index] + slippage_biases_dictionary[str(bin)]
 					amplified_discrete_realizations = amplified_discrete_realizations + [bin]*amplified_occurrencies[index]
 
+			else:
+				# Tick slippage bias
+				amplified_IS_Histogram.slippage_bias = False
+
 
 			### Calculate amplified_frequencies (abundances)
 			amplified_frequencies = [] ### VARIABLE TO RETURN
@@ -161,22 +181,21 @@ class Histogram:
 				p_value_post_amplification = p_value
 				another_GOF_indicator_post_amplification = KS_test
 			else:
-				print "\n\n[WARNING] 'Amplify()'' method of Histogram Class, up to now, can't provide either 'p_value_post_amplification' or 'another_GOF_indicator_post_amplification' for {0} distribution...!".format(self.source_distribution)
+				print "\n\n[WARNING] 'Amplify()'' method of IS_Histogram Class, up to now, can't provide either 'p_value_post_amplification' or 'another_GOF_indicator_post_amplification' for {0} distribution...!".format(self.source_distribution)
 				print "          By now, 'None'(s) have been returned; conversely, all the other attributes are correct.\n"
 
 			### Update 'amplified' attribute
-			amplified_Histogram.amplified = True
-			amplified_Histogram.n_of_mapped_sequencies = total_amplified_n_of_events
-			amplified_Histogram.sequence_count = amplified_occurrencies
-			amplified_Histogram.abundances = amplified_frequencies
-			amplified_Histogram.p_value_post_amplification = p_value_post_amplification
-			amplified_Histogram.another_GOF_indicator_post_amplification = another_GOF_indicator_post_amplification #KS_test if source_distribution='gauss'
+			amplified_IS_Histogram.n_of_mapped_sequencies = total_amplified_n_of_events
+			amplified_IS_Histogram.sequence_count = amplified_occurrencies
+			amplified_IS_Histogram.abundances = amplified_frequencies
+			amplified_IS_Histogram.p_value_post_amplification = p_value_post_amplification
+			amplified_IS_Histogram.another_GOF_indicator_post_amplification = another_GOF_indicator_post_amplification #KS_test if source_distribution='gauss'
 
-			### Return the amplified Histogram
-			return amplified_Histogram
+			### Return the amplified IS_Histogram
+			return amplified_IS_Histogram
 
 		else:
-			print "\n\n[WARNING] You are trying to amplify() an Histogram object that seems to be already amplified...!"
+			print "\n\n[WARNING] You are trying to amplify() an IS_Histogram object that seems to be already amplified...!"
 			print "          Because of this, the same object has been returned by amplify() method.\n"
 
 			### Resturn itself
@@ -202,9 +221,9 @@ class Histogram:
 				figure_title = self.source_distribution + " (N={0}, expectation={1}, next_moment={2}, p={3})".format(str(self.n_of_events), str(self.expected_value), str(self.distribution_parameters), str(self.p_value)[:4])
 		else:
 			figure_title = title
-		# Case of Amplified Histogram
+		# Case of Amplified IS_Histogram
 		if (self.amplified == True):
-			figure_title = figure_title + "\n[Amplified to MS = {0}; p = {1}]".format(str(self.n_of_mapped_sequencies), str(self.p_value_post_amplification))
+			figure_title = figure_title + "\n[Amplified to MS = {0}, AmpBias = {2}, SlipBias = {3}; p = {1}]".format(str(self.n_of_mapped_sequencies), str(self.p_value_post_amplification)[:4], str(self.amplification_bias)[0], str(self.slippage_bias)[0])
 
 		# Insert Title
 		plt.title(figure_title)
@@ -240,10 +259,10 @@ class Histogram:
 					next_moment = ""
 					if ((distribution_parameters is dict) and (distribution_parameters != {})):
 						next_moment = "&"+str(self.distribution_parameters).split("': ")[1][:-1]
-					file_name = "#" + str(id_num) + "_Hist_"+self.source_distribution+"_N{0}_[{1}{2}]_p={3}".format(str(self.n_of_events), str(self.expected_value), next_moment, str(self.p_value)[:4])
-				# Case of Amplified Histogram
+					file_name = "#" + str(id_num) + "_Hist_"+self.source_distribution+"_N{0}_[{1}-{2}]_p={3}".format(str(self.n_of_events), str(self.expected_value), next_moment, str(self.p_value)[:4])
+				# Case of Amplified IS_Histogram
 				if (self.amplified == True):
-					file_name = file_name + "_[Amplified_MS{0}]".format(str(self.n_of_mapped_sequencies))
+					file_name = file_name + "_[Amplified_MS{0}_ab{1}_sb{2}]".format(str(self.n_of_mapped_sequencies), str(self.amplification_bias)[0], str(self.slippage_bias)[0])
 				file_name = file_name + ".pdf"
 			else:
 				file_name = name

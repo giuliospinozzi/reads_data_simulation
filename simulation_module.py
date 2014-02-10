@@ -207,7 +207,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 
 		# Accounting for discretized_realizations falling beyond bin boundaries, then clean discretized_realizations
 		discrete_realizations_beyond_edges = {}   # key = string, +/- distance from expected_value
-												 # item = integer, number of occurrencies found
+												  # item = integer, number of occurrencies found
 		cleaned_discretized_realizations = [] ### VARIABLE TO RETURN
 											  # The same as discretized_realizations but without realizations falling beyond bin boundaries
 		for discrete_realization in discretized_realizations:

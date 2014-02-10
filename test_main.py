@@ -6,13 +6,13 @@ import simulation_module
 source_distribution = 'gauss'
 distribution_parameters = {'gauss':{'st_dev':1.0}}
 span = 7
-n_of_events = 15
+n_of_events = 10
 n_of_trial = 4
 # p_value_threshold = 0.05 ...shape a parte, favorisce valori attesi sballati! (penalizza accuratezza del mio algoritmo gauss nel matricione!!)
 p_value_threshold = 1 ## OCCHIO!! Cosi' li tengo tutti (evitare save_plot...)
 
-show_plot = False
-save_plot = True
+show_plot = True
+save_plot = False
 
 amp_bias = True
 slip_bias = True
@@ -64,7 +64,7 @@ for i in range(0,n_of_trial):
 
 		#Amplify
 		print "\nNow trying to amplify ... ",
-		Amplified_IS_Histogram_object = IS_Histogram_object.amplify(amplification_bias=amp_bias, minimum_amplification_factor=0, maximum_amplification_factor=1000, slippage_bias=slip_bias, minimum_splippage_percentage=0, maximum_splippage_percentage=1)
+		Amplified_IS_Histogram_object = IS_Histogram_object.amplify(minimum_amplification_factor=0, maximum_amplification_factor=1000, amplification_bias=amp_bias, slippage_bias=slip_bias, minimum_splippage_percentage=0, maximum_splippage_percentage=1)
 		print "Done!"
 
 		# Print Info about current IS_Histogram

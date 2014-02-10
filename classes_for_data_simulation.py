@@ -67,10 +67,16 @@ class IS_Histogram:
 
 
 
-	def amplify (self, amplification_bias=True, minimum_amplification_factor=0, maximum_amplification_factor=1000, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
+	def amplify (self, minimum_amplification_factor=0, maximum_amplification_factor=1000, amplification_bias=True, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
 
 		# This method works only with unamplified IS_Histograms
 		if (self.amplified == False):
+
+			### Control and Cast
+			if ((type(minimum_amplification_factor) is not int) or (type(maximum_amplification_factor) is not int)):
+				minimum_amplification_factor = int(minimum_amplification_factor)
+				maximum_amplification_factor = int(maximum_amplification_factor)
+				print "\n[WARNING] 'Amplify()' method of IS_Histogram Class supports only integer arguments: cast has been done."
 
 			### Create a copy of IS_Histogram object
 			amplified_IS_Histogram = copy.deepcopy(self) ### OBJECT TO RETURN
@@ -85,12 +91,6 @@ class IS_Histogram:
 
 			### Introduce PCR-AMPLIFICATION BIAS for each realization
 			if (amplification_bias == True): 
-
-				# Cast
-				if ((type(minimum_amplification_factor) is not int) or (type(maximum_amplification_factor) is not int)):
-					minimum_amplification_factor = int(minimum_amplification_factor)
-					maximum_amplification_factor = int(maximum_amplification_factor)
-					print "\n[WARNING] 'Amplify()' method of IS_Histogram Class supports only integer arguments: cast has been done."
 
 				# Tick amplification bias
 				amplified_IS_Histogram.amplification_bias = True
@@ -122,15 +122,21 @@ class IS_Histogram:
 					amplified_occurrencies_index = self.bins.index(selected_realization)
 					amplified_occurrencies[amplified_occurrencies_index] = amplified_occurrencies[amplified_occurrencies_index] + current_amplification_factor
 
-			else:
+			else: #Perform a simple 'rescaling' with a random-selected factor (between 1 and maximum_amplification_factor)
 				# Tick amplification bias
 				amplified_IS_Histogram.amplification_bias = False
-				############################################################################################################
-				#                           ### TO DO (although not strictly necessary) ###                                #
-				# Perform a simple 'rescaling' with a random-selected factor (between 1 and maximum_amplification_factor)  #
-				# Update attribute                                                                                         #
-				############################################################################################################
 
+				# Choose a superimposed amplification_factor
+				amplification_factor = random.randint(minimum_amplification_factor,maximum_amplification_factor)
+
+				# Apply amplification_factor
+				total_amplified_n_of_events = self.n_of_events*amplification_factor
+				amplified_discrete_realizations = []
+				for realization in self.discrete_realizations:
+					amplified_discrete_realizations = amplified_discrete_realizations + [realization]*amplification_factor
+				amplified_occurrencies = []
+				for occurrence in self.occurrencies:
+					amplified_occurrencies.append(occurrence*amplification_factor)
 
 
 			### Introduce PCR-SLIPPAGE BIAS for each occurrence (bin)

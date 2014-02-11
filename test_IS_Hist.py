@@ -95,9 +95,3 @@ print "- #N Different IS_Histograms generated = {1}/{0} ({2}%)".format(str(n_of_
 print "- #N Shapes under p={3} threshold level = {0}/{1} ({2}%)".format(str(ugly),str(i+1),str(100*float(ugly)/float(i+1)), str(p_value_threshold))
 print "  [among which {0} are different ({1}%)]\n\n".format(str(len(ugly_hist)), str(100*float(len(ugly_hist))/float(ugly)))
 print "\n\n[QUIT]\tBye!\n\n"
-
-
-
-
-
-

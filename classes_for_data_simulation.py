@@ -11,7 +11,7 @@ header = """
 
  Description:
   - This module contains classes used in reads data
-  	simulations
+  	simulations (simulation_module.py)
   
  Note: [...]
 
@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 ###############################
 
 ###Import Module(s)#####################
-import simulation_module
+#import yyyy
 ########################################
 
 

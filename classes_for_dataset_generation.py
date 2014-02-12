@@ -36,7 +36,7 @@ from datetime import datetime
 
 class Simulation_RUN:
 
-	def __init__ (self, N_IS, source_distribution, distribution_parameters, span, n_of_events_per_IS, IS_list, n_IS_Histogram_draining_out, total_n_of_realization_out, average_p_value, p_value_st_dev, pre_amplification_diversity,
+	def __init__ (self, N_IS, source_distribution, expected_value, distribution_parameters, span, n_of_events_per_IS, IS_list, n_IS_Histogram_draining_out, total_n_of_realization_out, average_p_value, p_value_st_dev, pre_amplification_diversity,
 		Amplified_IS_list, amplification_bias, minimum_amplification_factor, maximum_amplification_factor, slippage_bias, minimum_splippage_percentage, maximum_splippage_percentage,
 		total_n_of_sequencies, mean_amplification_factor, average_p_value_post_amplification, p_value_st_dev_post_amplification, post_amplification_diversity):
 
@@ -45,6 +45,7 @@ class Simulation_RUN:
 
 		self.N_IS = N_IS
 		self.source_distribution = source_distribution
+		self.expected_value = expected_value
 		self.distribution_parameters = distribution_parameters
 		self.span = span
 		self.n_of_events_per_IS = n_of_events_per_IS
@@ -144,6 +145,7 @@ class Simulation_RUN:
 
 			summary_file_IO.write ( 'N_IS:\t' + str(self.N_IS) + '\n')
 			summary_file_IO.write ( 'source_distribution:\t' + str(self.source_distribution) + '\n')
+			summary_file_IO.write ( 'expected_value:\t' + str(self.expected_value) + '\n')
 			summary_file_IO.write ( 'distribution_parameters:\t' + str(self.distribution_parameters) + '\n')
 			summary_file_IO.write ( 'span:\t' + str(self.span) + '\n')
 			summary_file_IO.write ( 'n_of_events_per_IS:\t' + str(self.n_of_events_per_IS) + '\n')

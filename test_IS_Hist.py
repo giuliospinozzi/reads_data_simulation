@@ -5,7 +5,7 @@ import simulation_module
 ### Set-up variables ##############################
 source_distribution = 'gauss'
 distribution_parameters = {'gauss':{'st_dev':1.0}}
-span = 7
+span = 15
 n_of_events = 10
 n_of_trial = 4
 # p_value_threshold = 0.05 ...shape a parte, favorisce valori attesi sballati! (penalizza accuratezza del mio algoritmo gauss nel matricione!!)
@@ -64,7 +64,7 @@ for i in range(0,n_of_trial):
 
 		#Amplify
 		print "\nNow trying to amplify ... ",
-		Amplified_IS_Histogram_object = IS_Histogram_object.amplify(minimum_amplification_factor=0, maximum_amplification_factor=1000, amplification_bias=amp_bias, slippage_bias=slip_bias, minimum_splippage_percentage=0, maximum_splippage_percentage=1)
+		Amplified_IS_Histogram_object = IS_Histogram_object.amplify(minimum_amplification_factor=1, maximum_amplification_factor=1000, amplification_bias=amp_bias, slippage_bias=slip_bias, minimum_splippage_percentage=0, maximum_splippage_percentage=1)
 		print "Done!"
 
 		# Print Info about current IS_Histogram
@@ -82,10 +82,10 @@ for i in range(0,n_of_trial):
 		Amplified_IS_Histogram_object.bar_plot(bar_width = 0.8, color = 'blue', title = 'auto', show = show_plot, save = save_plot, name = 'auto', path = 'current_location', id_num = ugly)
 
 	# Change distribution_parameters
-	#distribution_parameters[source_distribution]['st_dev'] = distribution_parameters[source_distribution]['st_dev'] + 0.001
+	#distribution_parameters[source_distribution]['st_dev'] = distribution_parameters[source_distribution]['st_dev'] + 0.01
 
 	# Change n_of_events
-	#n_of_events = n_of_events + 100
+	#n_of_events = n_of_events + 1
 
 ###################################################################################################################################
 

@@ -23,6 +23,7 @@ header = """
 import os
 import copy
 import random
+import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 ###############################
@@ -67,7 +68,7 @@ class IS_Histogram:
 
 
 
-	def amplify (self, minimum_amplification_factor=0, maximum_amplification_factor=1000, amplification_bias=True, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
+	def amplify (self, minimum_amplification_factor=1, maximum_amplification_factor=1000, amplification_bias=True, slippage_bias=True, minimum_splippage_percentage=0, maximum_splippage_percentage=1):
 
 		# This method works only with unamplified IS_Histograms
 		if (self.amplified == False):
@@ -113,7 +114,7 @@ class IS_Histogram:
 					# remove it (like pop)
 					discrete_realizations.remove(selected_realization)
 					# Amplify: relate a number to selected_realization
-					current_amplification_factor = random.randint(minimum_amplification_factor,maximum_amplification_factor)
+					current_amplification_factor = np.random.random_integers(minimum_amplification_factor,maximum_amplification_factor)
 					# Update amplified_discrete_realizations
 					amplified_discrete_realizations = amplified_discrete_realizations + [selected_realization]*current_amplification_factor
 					# Update total_amplified_n_of_events
@@ -127,7 +128,7 @@ class IS_Histogram:
 				amplified_IS_Histogram.amplification_bias = False
 
 				# Choose a superimposed amplification_factor
-				amplification_factor = random.randint(minimum_amplification_factor,maximum_amplification_factor)
+				amplification_factor = np.random.random_integers(minimum_amplification_factor,maximum_amplification_factor)
 
 				# Apply amplification_factor
 				total_amplified_n_of_events = self.n_of_events*amplification_factor
@@ -154,10 +155,26 @@ class IS_Histogram:
 				for bin, occurrency in zip(self.bins, amplified_occurrencies):
 
 					# State how much occurrencies go away:
-					occurrencies_variation = random.randint(int(occurrency*minimum_splippage_percentage*0.01),int(occurrency*maximum_splippage_percentage*0.01))
+					# RATIONALE: only few sequences will change their mapping location because of a stutter (e.g. the stutter occurs in firsts nucleotides... 0to1%...)
+					occurrencies_variation = np.random.random_integers(int(occurrency*minimum_splippage_percentage*0.01),int(occurrency*maximum_splippage_percentage*0.01))
 
 					# State 'where this stuff goes'
-					key = str(random.choice(self.bins))
+					#key = str(random.choice(self.bins)) # Old code, working but conceptually poor, even more if you increase span!
+					# New code - RATIONALE: 'A stochastic model of the processes in PCR based amplification [...]', Jos Weusten, Jos Herbergs 2012
+					#                        doi:10.1016/j.fsigen.2011.01.003
+					min_p_two_stutters = 0.0
+					max_p_two_stutters = 1.0
+					min_p_one_stutter = 2.5
+					max_p_one_stutter = 25.0
+					p_two_stutter = random.triangular(min_p_two_stutters, max_p_two_stutters) / 100.0
+					p_one_stutter = random.triangular(min_p_one_stutter, max_p_one_stutter) /100.0
+					p_no_stutter = 1.0 - p_one_stutter - p_two_stutter
+					direction = random.choice([-1,1])
+					sample = [bin]*int(round(p_no_stutter,3)*1000) + [bin+direction]*int(round(p_one_stutter,3)*1000) + [bin+(2*direction)]*int(round(p_two_stutter,3)*1000)
+					choice = random.choice(sample)
+					key = str(choice)
+					if (choice not in self.bins):
+						key = str(bin)
 
 					# Update Slippage Biases Dictionary
 					slippage_biases_dictionary[str(bin)] = slippage_biases_dictionary[str(bin)] - occurrencies_variation # Current bin loose...
@@ -180,6 +197,7 @@ class IS_Histogram:
 			for amplified_occurrence in amplified_occurrencies:
 				amplified_frequencies.append(float(amplified_occurrence)/float(total_amplified_n_of_events))
 
+
 			### Calculate p_value_post_amplification and another_GOF_indicator_post_amplification
 			p_value_post_amplification = None ### VARIABLE TO RETURN
 			another_GOF_indicator_post_amplification = None ### VARIABLE TO RETURN
@@ -187,7 +205,7 @@ class IS_Histogram:
 				# Calculate p-value of Kolmogorov-Smirnov test (with respect to initial distribution settings)
 				expected_value = self.expected_value
 				st_dev = self.distribution_parameters['st_dev']
-				standardized_data = [ float(r - expected_value)/float(st_dev) for r in amplified_discrete_realizations]
+				standardized_data = [ float(r - expected_value+0.5)/float(st_dev) for r in amplified_discrete_realizations]
 				KS_test, p_value = stats.kstest(standardized_data, 'norm')
 				p_value_post_amplification = p_value
 				another_GOF_indicator_post_amplification = KS_test

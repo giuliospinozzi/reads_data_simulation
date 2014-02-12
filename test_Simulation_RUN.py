@@ -7,11 +7,11 @@ import dataset_module
 ### Set-up variables ##############################
 source_distribution = 'gauss'
 distribution_parameters = {'gauss':{'st_dev':1.0}}
-span = 7
+span = 15
 
-N_of_Simulation = 2
-N_IS = 100
-n_of_events_per_IS = 10
+N_of_Simulation = 2 #20
+N_IS = 1000
+n_of_events_per_IS = 1
 
 amplification_bias = True
 slippage_bias = True
@@ -45,12 +45,12 @@ for i in range(1,N_of_Simulation+1):
 	reference_bedFile_name_and_path = Simulation_RUN_object.generate_reference_bedFile(chromosome)
 	print "Done!"
 
-	# Create Association File(s)
-	print "\n\t\t* Creating Associations File(s) ... ",
-	assFile_path_and_name, REFassFile_path_and_name = dataset_module.generateAssociationFiles(List_of_Simulation_RUNs)
-	print "Done!"
+	n_of_events_per_IS += 1 ### CHANGE NofEVENTS
 
-	n_of_events_per_IS += 1
+# Create Association File(s)
+print "\n\n[FINAL TASK] Creating Associations File(s) ... ",
+assFile_path_and_name, REFassFile_path_and_name = dataset_module.generateAssociationFiles(List_of_Simulation_RUNs)
+print "Done!"
 
 ### End print
 print "\n\n[QUIT]\tBye!\n\n"

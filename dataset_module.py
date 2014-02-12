@@ -34,7 +34,7 @@ import simulation_module
 
 
 
-def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bias, N_IS = 2000, source_distribution = 'gauss', distribution_parameters = {'gauss':{'st_dev':1.0}}, span = 7):
+def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bias, N_IS = 1000, source_distribution = 'gauss', distribution_parameters = {'gauss':{'st_dev':1.0}}, span = 15):
 
 	'''
 	*** The best way to get an Simulation_RUN Class Instance from few input parameters ***
@@ -48,7 +48,7 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 	### Set SIMULATION RUN DEFAULTS
 	
 	# Amplification Bias settings (if given True)
-	minimum_amplification_factor=0
+	minimum_amplification_factor=1
 	maximum_amplification_factor=1000
 
 	# Slippage Bias settings (if given True)
@@ -97,7 +97,6 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 		p_value_list.append(IS_Histogram_object.p_value)
 		realization_count += len(IS_Histogram_object.discrete_realizations)
 
-
 		# Amplify IS Hist -> Amplified_IS_Histogram_object
 		Amplified_IS_Histogram_object = IS_Histogram_object.amplify(minimum_amplification_factor=minimum_amplification_factor, maximum_amplification_factor=maximum_amplification_factor, amplification_bias=amplification_bias, slippage_bias=slippage_bias, minimum_splippage_percentage=minimum_splippage_percentage, maximum_splippage_percentage=maximum_splippage_percentage)
 		Amplified_IS_Histogram_list.append(Amplified_IS_Histogram_object)
@@ -110,6 +109,8 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 
 
 	# Finalize results
+	expected_value = IS_Histogram_list[0].expected_value
+
 	average_p_value = np.mean(p_value_list)
 	p_value_st_dev = np.std(p_value_list)
 
@@ -123,7 +124,7 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 
 
 	# CREATE FINAL OBJECT TO RETURN #
-	return classes_for_dataset_generation.Simulation_RUN(N_IS, source_distribution, distribution_parameters, span, n_of_events_per_IS, IS_Histogram_list, n_IS_Histogram_draining_out, total_n_of_realization_out, average_p_value, p_value_st_dev, pre_amplification_diversity,
+	return classes_for_dataset_generation.Simulation_RUN(N_IS, source_distribution, expected_value, distribution_parameters, span, n_of_events_per_IS, IS_Histogram_list, n_IS_Histogram_draining_out, total_n_of_realization_out, average_p_value, p_value_st_dev, pre_amplification_diversity,
 		Amplified_IS_Histogram_list, amplification_bias, minimum_amplification_factor, maximum_amplification_factor, slippage_bias, minimum_splippage_percentage, maximum_splippage_percentage,
 		total_n_of_sequencies, mean_amplification_factor, average_p_value_post_amplification, p_value_st_dev_post_amplification, post_amplification_diversity)
 

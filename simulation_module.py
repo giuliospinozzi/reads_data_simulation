@@ -189,7 +189,7 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 		realizations = []
 		discretized_realizations = []
 		for i in range(0, n_of_events):
-			r = random.gauss(expected_value,st_dev)
+			r = random.gauss(expected_value+0.5,st_dev)
 			realizations.append(r)
 			discretized_realizations.append(int(r))
 
@@ -224,13 +224,24 @@ def GENERATE_IS_HISTOGRAM (source_distribution, distribution_parameters, span, n
 				# Update cleaned_discretized_realizations
 				cleaned_discretized_realizations.append(discrete_realization)
 
+		### DEV CONTROL ###
+		try:
+			1/total_occurrencies
+		except:
+			print "\n\n"
+			print "realizations = ", realizations
+			print "discretized_realizations", discretized_realizations
+			print "total_occurrencies = ", total_occurrencies
+			print "discrete_realizations_beyond_edges = ", discrete_realizations_beyond_edges
+			print "cleaned_discretized_realizations = ", cleaned_discretized_realizations
+
 		# Compute frequencies
 		frequencies = [] ### VARIABLE TO RETURN
 		for occurrence in occurrencies:
 			frequencies.append(float(occurrence)/total_occurrencies)
 
 		# 'Fit' data and test goodness-of-fit
-		realizations_standardized = [ float(r - expected_value)/float(st_dev) for r in realizations]
+		realizations_standardized = [ float(r - expected_value+0.5)/float(st_dev) for r in realizations]
 		KS_test, p_value = stats.kstest(realizations_standardized, 'norm') ###VARIABLES TO RETURN
 		###############################################################################
 		### Kolmogorov-Smirnov test for goodness of fit is done over 'realizations'   #

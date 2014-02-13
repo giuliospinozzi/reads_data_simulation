@@ -7,9 +7,6 @@ from string import Template
 from Bio import SeqIO
 from time import gmtime, strftime
 
-# my classes
-from Tiget import JobMonitor, Experiment, IntegrationLocus
-
 header = """
 
 +--------------------------------------------------+

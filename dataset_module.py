@@ -22,6 +22,7 @@ header = """
 ###Requested Package(s) Import#
 import numpy as np
 import os
+import subprocess
 ###############################
 
 ###Import Module(s)#####################
@@ -49,7 +50,7 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 	
 	# Amplification Bias settings (if given True)
 	minimum_amplification_factor=1
-	maximum_amplification_factor=1000
+	maximum_amplification_factor=100
 
 	# Slippage Bias settings (if given True)
 	minimum_splippage_percentage=0
@@ -133,76 +134,102 @@ def GENERATE_SIMULATION_RUN (n_of_events_per_IS, amplification_bias, slippage_bi
 
 def generateAssociationFiles (List_of_Simulation_RUNs, assFile_name = 'auto', assFile_path = 'current_location'):
 
-		### Check for *.bed files
-		for Simulation_RUN in List_of_Simulation_RUNs:
-			if (Simulation_RUN.bedFile == False):
-				error_message = "[ERROR]\tgenerateAssociationFiles() bad calling: requested *.bed files are not available!"
-				sys.exit("\n\n" + error_message + "\n\t[QUIT]\n\n")
+	### Check for *.bed files
+	for Simulation_RUN in List_of_Simulation_RUNs:
+		if (Simulation_RUN.bedFile == False):
+			error_message = "[ERROR]\tgenerateAssociationFiles() bad calling: requested *.bed files are not available!"
+			sys.exit("\n\n" + error_message + "\n\t[QUIT]\n\n")
 
-		### Prepare assFile name and path
-		assFile_path_and_name = ""
+	### Prepare assFile name and path
+	assFile_path_and_name = ""
 
-		if (assFile_name == 'auto'):
-			assFile_name = "AssociationFile.tsv"
-		else:
-			assFile_name = str(assFile_name)
+	if (assFile_name == 'auto'):
+		assFile_name = "AssociationFile.tsv"
+	else:
+		assFile_name = str(assFile_name)
 
+	if (assFile_path == 'current_location'):
+		assFile_path_and_name = os.path.normpath(os.path.join(os.getcwd(), assFile_name))
+	else:
+		assFile_path_and_name = os.path.normpath(str(assFile_path), assFile_name)
+
+	### Check for *_REFERENCE.bed files
+	reference_files = True
+	for Simulation_RUN in List_of_Simulation_RUNs:
+		if (Simulation_RUN.reference_bedFile == False):
+			reference_files = False
+	if (reference_files == False):
+		message = "[WARNING - generateAssociationFiles() call]\t*_REFERENCE.bed files are not available"
+		print "\n\n" + message + "\n\t[CONTINUE without processing REFERENCE DATA]\n\n"
+
+	### Prepare REFassFile name and path
+	REFassFile_path_and_name = None
+	if (reference_files == True):
+		REFassFile_name = "REFERENCE_" + assFile_name
 		if (assFile_path == 'current_location'):
-			assFile_path_and_name = os.path.normpath(os.path.join(os.getcwd(), assFile_name))
+			REFassFile_path_and_name = os.path.normpath(os.path.join(os.getcwd(), REFassFile_name))
 		else:
-			assFile_path_and_name = os.path.normpath(str(assFile_path), assFile_name)
+			REFassFile_path_and_name = os.path.normpath(str(assFile_path), REFassFile_name)
 
-		### Check for *_REFERENCE.bed files
-		reference_files = True
-		for Simulation_RUN in List_of_Simulation_RUNs:
-			if (Simulation_RUN.reference_bedFile == False):
-				reference_files = False
-		if (reference_files == False):
-			message = "[WARNING - generateAssociationFiles() call]\t*_REFERENCE.bed files are not available"
-			print "\n\n" + message + "\n\t[CONTINUE without processing REFERENCE DATA]\n\n"
-
-		### Prepare REFassFile name and path
-		REFassFile_path_and_name = None
-		if (reference_files == True):
-			REFassFile_name = "REFERENCE_" + assFile_name
-			if (assFile_path == 'current_location'):
-				REFassFile_path_and_name = os.path.normpath(os.path.join(os.getcwd(), REFassFile_name))
-			else:
-				REFassFile_path_and_name = os.path.normpath(str(assFile_path), REFassFile_name)
-
-		### LOOP OVER List_of_Simulation_RUNs: computing assFile_rows and REFassFile_rows
-		assFile_rows = []
-		REFassFile_rows = []
-		void = "NULL"
-		for Simulation_RUN in List_of_Simulation_RUNs:
-
-			### assFile
-			bedFile_name = os.path.basename(Simulation_RUN.bedFile_path_and_name) # bedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
-			treatment = str(Simulation_RUN.n_of_events_per_IS) # Simulation_RUN.n_of_events_per_IS in place of treatment (time point)
-			tissue = str(Simulation_RUN.amplification_bias) # Simulation_RUN.amplification_bias in place of tissue
-			sample = str(Simulation_RUN.slippage_bias)
-			ass_row = bedFile_name + '\t' + bedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + bedFile_name + '\t' + bedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
-			assFile_rows.append(ass_row)
-
-			### REFassFile
-			if (reference_files == True):
-				REFbedFile_name = os.path.basename(Simulation_RUN.reference_bedFile_path_and_name) # REFbedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
-				REFass_row = REFbedFile_name + '\t' + REFbedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + REFbedFile_name + '\t' + REFbedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
-				REFassFile_rows.append(REFass_row)
-
-
-		### Write files
+	### LOOP OVER List_of_Simulation_RUNs: computing assFile_rows and REFassFile_rows
+	assFile_rows = []
+	REFassFile_rows = []
+	void = "NULL"
+	for Simulation_RUN in List_of_Simulation_RUNs:
 
 		### assFile
-		with open(assFile_path_and_name, 'w') as assFile_IO:
-			assFile_IO.write("\n".join(assFile_rows))
-			assFile_IO.close()
+		bedFile_name = os.path.basename(Simulation_RUN.bedFile_path_and_name) # bedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
+		treatment = str(Simulation_RUN.n_of_events_per_IS) # Simulation_RUN.n_of_events_per_IS in place of treatment (time point)
+		tissue = str(Simulation_RUN.amplification_bias) # Simulation_RUN.amplification_bias in place of tissue
+		sample = str(Simulation_RUN.slippage_bias)
+		ass_row = bedFile_name + '\t' + bedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + bedFile_name + '\t' + bedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
+		assFile_rows.append(ass_row)
+		### update attributes
+		Simulation_RUN.associationFile = True
+		Simulation_RUN.associationFile_path_and_name = assFile_path_and_name
 
 		### REFassFile
 		if (reference_files == True):
-			with open(REFassFile_path_and_name, 'w') as REFassFile_IO:
-				REFassFile_IO.write("\n".join(REFassFile_rows))
-				REFassFile_IO.close()
+			REFbedFile_name = os.path.basename(Simulation_RUN.reference_bedFile_path_and_name) # REFbedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
+			REFass_row = REFbedFile_name + '\t' + REFbedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + REFbedFile_name + '\t' + REFbedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
+			REFassFile_rows.append(REFass_row)
+			### update attributes
+			Simulation_RUN.reference_associationFile = True
+			Simulation_RUN.reference_associationFile_path_and_name = REFassFile_path_and_name
 
-		### Return complete (name and) path of created files (None if file has not be created)
-		return assFile_path_and_name, REFassFile_path_and_name
+
+	### Write files
+
+	### assFile
+	with open(assFile_path_and_name, 'w') as assFile_IO:
+		assFile_IO.write("\n".join(assFile_rows))
+		assFile_IO.close()
+
+	### REFassFile
+	if (reference_files == True):
+		with open(REFassFile_path_and_name, 'w') as REFassFile_IO:
+			REFassFile_IO.write("\n".join(REFassFile_rows))
+			REFassFile_IO.close()
+
+	### Return complete (name and) path of created files (None if file has not be created)
+	return assFile_path_and_name, REFassFile_path_and_name
+
+
+
+
+def exportDataToDB (PYTHON_TOOL, bedFile_path_and_name, associationFile_path_and_name, patient, pool, tag, DB, dbschema, dbtable):
+
+	### Each launch should be done with a different/unique tag
+	if (tag == None):
+		tag = os.path.basename(bedFile_path_and_name)
+
+	### Prepare command
+	command = ['python', PYTHON_TOOL, '-b', bedFile_path_and_name, '-a', associationFile_path_and_name, '--patient', patient, '--pool', pool, '--tag', tag, '--dbschema', dbschema, '--dbtable', dbtable]
+
+	### Launch
+	process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	# Collect st_output and errors
+	out, err = process.communicate()
+
+	### Return
+	return out, err

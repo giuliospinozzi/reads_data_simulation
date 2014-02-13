@@ -11,7 +11,7 @@ span = 15
 
 N_of_Simulation = 2 #20
 N_IS = 1000
-n_of_events_per_IS = 1
+n_of_events_per_IS = 3
 
 amplification_bias = True
 slippage_bias = True
@@ -51,6 +51,22 @@ for i in range(1,N_of_Simulation+1):
 print "\n\n[FINAL TASK] Creating Associations File(s) ... ",
 assFile_path_and_name, REFassFile_path_and_name = dataset_module.generateAssociationFiles(List_of_Simulation_RUNs)
 print "Done!"
+
+### Verifying attributes:
+print "             ", assFile_path_and_name
+print "             ", REFassFile_path_and_name, "\n"
+for Simulation_RUN in List_of_Simulation_RUNs:
+	print "             Simulation chr{0} Attributes:".format(str(Simulation_RUN.n_of_events_per_IS))
+	print "             BedFile:", Simulation_RUN.bedFile
+	print "             path:", Simulation_RUN.bedFile_path_and_name
+	print "             REFBedFile:", Simulation_RUN.reference_bedFile
+	print "             path:", Simulation_RUN.reference_bedFile_path_and_name
+	print "             AssFile:", Simulation_RUN.associationFile
+	print "             path:", Simulation_RUN.associationFile_path_and_name
+	print "             REFAssFile:", Simulation_RUN.reference_associationFile
+	print "             path:", Simulation_RUN.reference_associationFile_path_and_name
+	print"\n"
+
 
 ### End print
 print "\n\n[QUIT]\tBye!\n\n"

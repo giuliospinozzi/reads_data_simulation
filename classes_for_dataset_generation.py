@@ -100,6 +100,9 @@ class Simulation_RUN:
 		self.associationFile = False
 		self.associationFile_path_and_name = None
 
+		self.reference_associationFile = False
+		self.reference_associationFile_path_and_name = None
+
 
 
 
@@ -232,11 +235,3 @@ class Simulation_RUN:
 
 		### Return complete (name and) path of created files (None if file has not be created)
 		return bedFile_path_and_name
-
-
-
-
-
-
-
-

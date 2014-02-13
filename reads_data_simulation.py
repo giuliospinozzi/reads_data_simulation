@@ -16,12 +16,12 @@ source_distribution = 'gauss' # The only available up to now
 distribution_parameters = {'gauss':{'st_dev':1.0}} # Sigma = 1bp
 												   # Due to discretized construction, the distribution
 												   # 'core' is centered in the 3bp in the middle of span
-span = 7 # N of bin per IS; expected value in the middle (3) for symmetric distribution; realization
-		 # beyond edges are discarded but tracked
+span = 15 # N of bin per IS; expected value in the middle (7) for symmetric distribution; realization
+		  # beyond edges are discarded but tracked
 
 
 ### Simulation Runs Parameters
-starting_n_of_events_per_IS = 10 # N of discrete realization per IS Histogram
+starting_n_of_events_per_IS = 1 # N of discrete realization per IS Histogram
 ending_n_of_events_per_IS = 20 # N of discrete realization per IS Histogram
 n_of_simulation_RUN = ending_n_of_events_per_IS - starting_n_of_events_per_IS + 1
 
@@ -33,17 +33,20 @@ slippage_bias = True # Fine tuning of 'how to' is performable in code: amplify()
 
 
 ### Export Data to DB
-export_data_to_DB = False
-db = "local"
+export_data_to_DB = True
+PYTHON_TOOL = "dbimport_redundantiss_from_bed.v2.py"
 
-dbschema = "SimulatedData"
+DB = "local"
 
-dbtable = "All"
-reference_dbtable = "Reference"
+dbschema = "simulation_data"
+
+dbtable = "all"
+reference_dbtable = "reference"
 
 patient = "Simulation"
 pool = "Stefano"
 tag = None ### This variable, each time, must host bedFile name!!!
+		     # Let be 'None' to do it automatically
 
 ### OTHER PARAMETER IN 'GENERATE_SIMULATION_RUN' FUNCTION (dataset_module.py)
 ### (see ###Set SIMULATION RUN DEFAULTS)
@@ -77,7 +80,7 @@ print "\t\t\t\t* Add PCR Amplification Bias: ", amplification_bias
 print "\t\t\t\t* Add Polymerase Slippage Bias: ", slippage_bias
 print "\t\t\t\t* EXPORT DATA TO DB: ", export_data_to_DB
 if (export_data_to_DB == True):
-	print "\t\t\t\t  - DB choice: ", db
+	print "\t\t\t\t  - DB choice: ", DB
 	print "\t\t\t\t  - Generated Data: {0}.{1}".format(dbschema, dbtable)
 	print "\t\t\t\t  - Reference Data: {0}.{1}".format(dbschema, reference_dbtable)
 print "\n"
@@ -92,6 +95,7 @@ if (slippage_bias == True):
 
 
 ### LOOP FOR SIMULATION RUNS
+j = 1
 for i in range(starting_n_of_events_per_IS, ending_n_of_events_per_IS+1): # Change N of Events per IS each loop (+1)
 
 	for aB in amplification_bias_switcher: # Switch Amplification Bias
@@ -99,7 +103,7 @@ for i in range(starting_n_of_events_per_IS, ending_n_of_events_per_IS+1): # Chan
 		for sB in slippage_bias_switcher: # Switch Slippage Bias
 
 			# Run a simulation
-			print "\n\n{0}\t### Running simulation {1} ({2} event per IS, AB {3}, SB {4}) ... ".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(i-starting_n_of_events_per_IS+1), str(i), str(aB), str(sB)),
+			print "\n\n{0}\t### Running simulation {1} of {5} ({2} event per IS, AB {3}, SB {4}) ... ".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(j), str(i), str(aB), str(sB), str(n_of_simulation_RUN*len(amplification_bias_switcher)*len(slippage_bias_switcher))),
 			Simulation_RUN_object = dataset_module.GENERATE_SIMULATION_RUN (n_of_events_per_IS = i, amplification_bias = aB, slippage_bias = sB, N_IS = n_IS_per_simulation_RUN, source_distribution = source_distribution, distribution_parameters = distribution_parameters, span = span)
 			List_of_Simulation_RUNs.append(Simulation_RUN_object)
 			print "Done!"
@@ -114,3 +118,32 @@ for i in range(starting_n_of_events_per_IS, ending_n_of_events_per_IS+1): # Chan
 			reference_bedFile_name_and_path = Simulation_RUN_object.generate_reference_bedFile(chromosome)
 			print "Done!"
 			print "\t\t\t\t ", reference_bedFile_name_and_path
+			j += 1
+# Now results are in List_of_Simulation_RUNs
+
+
+### Create Association Files (one for simulated data and another for reference data)
+print "\n\n\n{0}\t[ASSOCIATION FILES GENERATION] Processing ... \n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+associationFile_path_and_name, REFassociationFile_path_and_name = dataset_module.generateAssociationFiles(List_of_Simulation_RUNs)
+print "Done!"
+print "{0}\t* ".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())), associationFile_path_and_name
+print "{0}\t* ".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())), REFassociationFile_path_and_name
+
+
+
+### Launch external app to write result on DB
+print "\n\n\n{0}\t[EXPORT DATA TO DB] Processing ... \n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+
+# Loop over List_of_Simulation_RUNs
+j = 1
+for Simulation_RUN in List_of_Simulation_RUNs:
+	print "\n{0}\t### Exporting simulation {1} of {2} ...".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(j), str(n_of_simulation_RUN*len(amplification_bias_switcher)*len(slippage_bias_switcher))),
+	std_output, errors = dataset_module.exportDataToDB (PYTHON_TOOL, Simulation_RUN.bedFile_path_and_name, Simulation_RUN.associationFile_path_and_name, patient, pool, tag, DB, dbschema, dbtable)
+	print "Done!"
+	print "{0}\t### Exporting related reference data ...".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+	std_output_REF, errors_REF = dataset_module.exportDataToDB (PYTHON_TOOL, Simulation_RUN.reference_bedFile_path_and_name, Simulation_RUN.reference_associationFile_path_and_name, patient, pool, tag, DB, dbschema, reference_dbtable)
+	print "Done!"
+	j += 1
+
+### Final
+print "\n\n[QUIT]\tAll tasks performed. Bye!\n\n"

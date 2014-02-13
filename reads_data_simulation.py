@@ -40,7 +40,7 @@ DB = "local"
 
 dbschema = "simulation_data"
 
-dbtable = "all"
+dbtable = "alldata"
 reference_dbtable = "reference"
 
 patient = "Simulation"
@@ -147,3 +147,35 @@ for Simulation_RUN in List_of_Simulation_RUNs:
 
 ### Final
 print "\n\n[QUIT]\tAll tasks performed. Bye!\n\n"
+
+####################################################################################################################################################################
+### END ############################################################################################################################################################
+####################################################################################################################################################################
+
+
+### Tip # Integration Analysis command template
+
+
+# Classic
+# python Integration_Analysis.py --dbDataset "simulation_data.alldata,simulation_data.reference" --columns treatment,tissue,sample --IS_method classic --collision --set_radius 0 --tsv --statistics
+
+# Gauss
+# python Integration_Analysis.py --dbDataset "simulation_data.alldata,simulation_data.reference" --columns treatment,tissue,sample --IS_method gauss --interaction_limit 3 --alpha 0.5  --collision --set_radius 0 --tsv --statistics
+
+# Comments
+# 1) treatment,tissue and sample  are the only discriminant in our datasets (respectively 'original N of gaussian Events per IS' (int), 'PCR Amplification Bias' (bool) and 'Polymerase Slippage Bias' (bool))
+# 2) --collision --set_radius 0 underlines perfect matching with 'reference' data
+# 3) default value for bushman_bp_rule in classic (3) and --interaction_limit 3 (=bushman_bp_rule) in gauss guarantee the same ensamble construction rule
+# 4) --alpha 0.5 in gauss states '1sigma=1bp', that is the simulation criteria
+# 5) If a phenomenon was regulated by a gaussian distribution like the one used by my algorithm, the 99.9 % of events would be under the comparison histogram used during the analysis
+
+# Obscure point: why we modeled an integration event as coming from such a gaussian?!
+
+
+### Further improvements
+
+# better if amplification factor was extracted from 0 (now 1) to max (now 100), in order to account for sequences lost
+# this change should be selective, and active only until at least a sequence remain in histogram!
+
+
+

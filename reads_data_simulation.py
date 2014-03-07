@@ -38,10 +38,10 @@ PYTHON_TOOL = "dbimport_redundantiss_from_bed.v2.py"
 
 DB = "local"
 
-dbschema = "simulation_data"
+dbschema = "sequence_simulation"
 
-dbtable = "alldata"
-reference_dbtable = "reference"
+dbtable = "allbiases"
+reference_dbtable = dbtable + "_reference"
 
 patient = "Simulation"
 pool = "Stefano"
@@ -85,13 +85,17 @@ if (export_data_to_DB == True):
 	print "\t\t\t\t  - Reference Data: {0}.{1}".format(dbschema, reference_dbtable)
 print "\n"
 
-### Setting up loop variables
-amplification_bias_switcher = [False]
-slippage_bias_switcher = [False]
-if (amplification_bias == True):
-	amplification_bias_switcher.append(True)
-if (slippage_bias == True):
-	slippage_bias_switcher.append(True)
+# ### Setting up loop variables
+# amplification_bias_switcher = [False]
+# slippage_bias_switcher = [False]
+# if (amplification_bias == True):
+# 	amplification_bias_switcher.append(True)
+# if (slippage_bias == True):
+# 	slippage_bias_switcher.append(True)
+
+### TEMP MOD, to manually split parameters combination in different tables
+amplification_bias_switcher = [amplification_bias]
+slippage_bias_switcher = [slippage_bias]
 
 
 ### LOOP FOR SIMULATION RUNS
@@ -178,4 +182,16 @@ print "\n\n[QUIT]\tAll tasks performed. Bye!\n\n"
 # this change should be selective, and active only until at least a sequence remain in histogram!
 
 
+### New Command template
 
+# Classic
+# 1) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.nobias,sequence_simulation.nobias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method classic --collision --set_radius 0 --tsv --statistics
+# 2) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.allbiases,sequence_simulation.allbiases_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method classic --collision --set_radius 0 --tsv --statistics
+# 3) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.ampbias,sequence_simulation.ampbias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method classic --collision --set_radius 0 --tsv --statistics
+# 4) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.slipbias,sequence_simulation.slipbias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method classic --collision --set_radius 0 --tsv --statistics
+
+# Gauss
+# 1) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.nobias,sequence_simulation.nobias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method gauss --interaction_limit 3 --alpha 0.5 --collision --set_radius 0 --tsv --statistics
+# 2) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.allbiases,sequence_simulation.allbiases_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method gauss --interaction_limit 3 --alpha 0.5 --collision --set_radius 0 --tsv --statistics
+# 3) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.ampbias,sequence_simulation.ampbias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method gauss --interaction_limit 3 --alpha 0.5 --collision --set_radius 0 --tsv --statistics
+# 4) nohup python /home/stefano/simulations/analysis/Integration_Analysis.py --dbDataset "sequence_simulation.slipbias,sequence_simulation.slipbias_reference" --query_steps 5000000 --rowthreshold 100000000 --columns treatment,tissue,sample --IS_method gauss --interaction_limit 3 --alpha 0.5 --collision --set_radius 0 --tsv --statistics

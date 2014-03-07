@@ -180,9 +180,9 @@ def generateAssociationFiles (List_of_Simulation_RUNs, assFile_name = 'auto', as
 		### assFile
 		bedFile_name = os.path.basename(Simulation_RUN.bedFile_path_and_name) # bedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
 		treatment = str(Simulation_RUN.n_of_events_per_IS) # Simulation_RUN.n_of_events_per_IS in place of treatment (time point)
-		tissue = str(Simulation_RUN.amplification_bias) # Simulation_RUN.amplification_bias in place of tissue
-		sample = str(Simulation_RUN.slippage_bias)
-		ass_row = bedFile_name + '\t' + bedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + bedFile_name + '\t' + bedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
+		tissue = "AmpB_" + str(Simulation_RUN.amplification_bias) # Simulation_RUN.amplification_bias in place of tissue
+		sample = "SlipB_" + str(Simulation_RUN.slippage_bias)
+		ass_row = bedFile_name + '\t' + bedFile_name + '\t' + tissue + '\t' + sample + '\t' + treatment + '\t' + bedFile_name + '\t' + bedFile_name + '\t' + void +  '\t' + void + '\t' + void + '\t' + void
 		assFile_rows.append(ass_row)
 		### update attributes
 		Simulation_RUN.associationFile = True
@@ -191,7 +191,7 @@ def generateAssociationFiles (List_of_Simulation_RUNs, assFile_name = 'auto', as
 		### REFassFile
 		if (reference_files == True):
 			REFbedFile_name = os.path.basename(Simulation_RUN.reference_bedFile_path_and_name) # REFbedFile_name in place of 'barcode join', 'LAM_id' and 'complete name of LAM'
-			REFass_row = REFbedFile_name + '\t' + REFbedFile_name + '\t' + tissue + '\t' + void + '\t' + treatment + '\t' + REFbedFile_name + '\t' + REFbedFile_name + '\t' + sample +  '\t' + void + '\t' + void + '\t' + void
+			REFass_row = REFbedFile_name + '\t' + REFbedFile_name + '\t' + tissue + '\t' + sample + '\t' + treatment + '\t' + REFbedFile_name + '\t' + REFbedFile_name + '\t' + void +  '\t' + void + '\t' + void + '\t' + void
 			REFassFile_rows.append(REFass_row)
 			### update attributes
 			Simulation_RUN.reference_associationFile = True

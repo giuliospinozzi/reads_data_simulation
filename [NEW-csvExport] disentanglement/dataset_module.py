@@ -225,10 +225,12 @@ def exportDataToDB (PYTHON_TOOL, bedFile_path_and_name, associationFile_path_and
 
 
 	### Prepare command
-	command = ['python', PYTHON_TOOL, '-b', bedFile_path_and_name, '-a', associationFile_path_and_name, '--patient', patient, '--pool', pool, '--tag', tag, '--dbschema', dbschema, '--dbtable', dbtable]
+	command = ['python', PYTHON_TOOL, '-b', bedFile_path_and_name, '-a', associationFile_path_and_name, '--db', DB, '--patient', patient, '--pool', pool, '--tag', tag, '--dbschema', dbschema, '--dbtable', dbtable, '--writecsv']
+	#command_4_windows = '{0} --bedfile="{1}" --associationfile="{2}" --db="{3}" --patient="{4}" --pool="{5}" --tag="{6}" --dbschema="{7}" --dbtable="{8}"'.format(PYTHON_TOOL, bedFile_path_and_name, associationFile_path_and_name, DB, patient, pool, tag, dbschema, dbtable)
 
 	### Launch
 	process = subprocess.Popen(command, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+	#process = subprocess.Popen(command_4_windows, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	# Collect st_output and errors
 	out, err = process.communicate()
 

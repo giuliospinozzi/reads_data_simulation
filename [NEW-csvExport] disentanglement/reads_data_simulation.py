@@ -1,5 +1,6 @@
 ###Requested Package(s) Import###
 from time import gmtime, strftime
+import os #
 #################################
 
 ###Import Module(s)#####
@@ -32,20 +33,26 @@ amplification_bias = True # Fine tuning of default 'how to' is performable in co
 						  # ACTUALLY IS 'GENERATE_SIMULATION_RUN' THAT FIX DEFAULT VALUE FOR SIMULATION (in code)
 slippage_bias = True # Fine tuning of default 'how to' is performable in code: amplify() method of IS_Histogram Class
 					 # ACTUALLY IS 'GENERATE_SIMULATION_RUN' THAT FIX DEFAULT VALUE FOR SIMULATION (in code)
-# *.bed files features
-# IS_distance = 100 # Standard Simulations
-IS_distance = 2 # Disentanglement 
-
+### *.bed files features
+IS_distance = 100 # 100 or more, distance between IS / IS-group
+group = 2 # 1 or more, N of IS per group: 1 for standard simulations, more for disentanglement
+group_internal_distance = 2 # 1 or more, distance between IS in the same group
 
 
 
 ### Export Data to DB
 export_data_to_DB = True
-PYTHON_TOOL = "dbimport_redundantiss_from_bed.v2.py"
+#PYTHON_TOOL = "dbimport_redundantiss_from_bed.v2.py"
+PYTHON_TOOL = "dbimport_redundantiss_from_bed.v3.py"
 
 DB = "local"
 dbschema = "sequence_simulation"
 dbtable = "disentanglement_allbiases"
+### Setting up names ###
+if (group > 1):
+	dbtable = dbtable + "_group{0}_dist{1}".format(str(group), str(group_internal_distance))
+
+###      #####       ###
 reference_dbtable = dbtable + "_reference"
 
 patient = "Simulation"
@@ -120,11 +127,11 @@ for i in range(starting_n_of_events_per_IS, ending_n_of_events_per_IS+1): # Chan
 			# Create bed(s) and summary file related to the simulation just run
 			print "\n\t\t\t\t* Creating related *.bed file and summary ... ",
 			chromosome = str(i) ### REMEMBER TO CHANGE CHROMOSOME EACH LOOP!!
-			bedFile_name_and_path, summary_file_path_and_name = Simulation_RUN_object.generate_bedFile(chromosome, IS_distance = IS_distance)
+			bedFile_name_and_path, summary_file_path_and_name = Simulation_RUN_object.generate_bedFile(chromosome, IS_distance = IS_distance, group = group, group_internal_distance = group_internal_distance)
 			print "Done!"
 			print "\t\t\t\t ", bedFile_name_and_path
 			print "\n\t\t\t\t* Creating a reference *.bed file ... ",
-			reference_bedFile_name_and_path = Simulation_RUN_object.generate_reference_bedFile(chromosome, IS_distance = IS_distance)
+			reference_bedFile_name_and_path = Simulation_RUN_object.generate_reference_bedFile(chromosome, IS_distance = IS_distance, group = group, group_internal_distance = group_internal_distance)
 			print "Done!"
 			print "\t\t\t\t ", reference_bedFile_name_and_path
 			j += 1
@@ -144,15 +151,56 @@ print "{0}\t* ".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())), REFassociationF
 print "\n\n\n{0}\t[EXPORT DATA TO DB] Processing ... \n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
 
 # Loop over List_of_Simulation_RUNs
+export_data_log_file = open("export_data_log_file.log","w") # log
 j = 1
+
+#script_file_name = "export_data_to_db.sh" # script
+#script_file = open(script_file_name,"a") # script
+#script_file.write("#!/bin/bash\n") # script
+#reference_script_file_name = "export_reference_data_to_db.sh" # script
+#reference_script_file = open(reference_script_file_name,"a") # script
+#reference_script_file.write("#!/bin/bash\n") # script
+
 for Simulation_RUN in List_of_Simulation_RUNs:
+
 	print "\n{0}\t### Exporting simulation {1} of {2} ...".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(j), str(n_of_simulation_RUN*len(amplification_bias_switcher)*len(slippage_bias_switcher))),
+	export_data_log_file.write("{0}\t### Exporting simulation {1} of {2} ...\n\n".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()), str(j), str(n_of_simulation_RUN*len(amplification_bias_switcher)*len(slippage_bias_switcher)))) # log
+
 	std_output, errors = dataset_module.exportDataToDB (PYTHON_TOOL, Simulation_RUN.bedFile_path_and_name, Simulation_RUN.associationFile_path_and_name, patient, pool, tag, DB, dbschema, dbtable)
+	export_data_log_file.write("# std_output:\n") # log
+	export_data_log_file.write(std_output) # log
+	export_data_log_file.write("\n# errors:\n") # log
+	export_data_log_file.write(errors) # log
+
+	#command_list = ['./'+PYTHON_TOOL, '-b', Simulation_RUN.bedFile_path_and_name, '-a', Simulation_RUN.associationFile_path_and_name, '--db', DB, '--patient', patient, '--pool', pool, '--tag', os.path.basename(Simulation_RUN.bedFile_path_and_name), '--dbschema', dbschema, '--dbtable', dbtable] # script
+	#command = ' '.join(command_list) # script
+	#script_file.write(command + '\n') # script
+
 	print "Done!"
+	export_data_log_file.write("\nDone!\n\n") # log
+
 	print "{0}\t### Exporting related reference data ...".format(strftime("%Y-%m-%d %H:%M:%S", gmtime())),
+	export_data_log_file.write("{0}\t### Exporting related reference data ...".format(strftime("%Y-%m-%d %H:%M:%S", gmtime()))) # log
+
 	std_output_REF, errors_REF = dataset_module.exportDataToDB (PYTHON_TOOL, Simulation_RUN.reference_bedFile_path_and_name, Simulation_RUN.reference_associationFile_path_and_name, patient, pool, tag, DB, dbschema, reference_dbtable)
+	export_data_log_file.write("# std_output:\n") # log
+	export_data_log_file.write(std_output_REF) # log
+	export_data_log_file.write("\n# errors:\n") # log
+	export_data_log_file.write(errors_REF) # log
+
+	#command_list = ['./'+PYTHON_TOOL, '-b', Simulation_RUN.reference_bedFile_path_and_name, '-a', Simulation_RUN.reference_associationFile_path_and_name, '--db', DB, '--patient', patient, '--pool', pool, '--tag', os.path.basename(Simulation_RUN.reference_bedFile_path_and_name), '--dbschema', dbschema, '--dbtable', reference_dbtable] # script
+	#command = ' '.join(command_list) # script
+	#reference_script_file.write(command + '\n') # script
+
 	print "Done!"
+	export_data_log_file.write("\nDone!\n\n***\t***\t***\t***\t***\t***\t***\n\n") # log
+
 	j += 1
+
+export_data_log_file.close() # log
+
+#script_file.close() # script
+#reference_script_file.close() # script
 
 ### Final
 print "\n\n[QUIT]\tAll tasks performed. Bye!\n\n"
